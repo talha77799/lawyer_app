@@ -19,9 +19,9 @@ export default function Navbar() {
           <li><Link to="/join-as-lawyer" className={isActive('/join-as-lawyer')}>Join as Lawyer</Link></li>
         </ul>
         <div className="nav-actions">
-          <a href="#" className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
+          <Link to="/download-app" className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
             <Download size={16} /> Download App
-          </a>
+          </Link>
           <Link to="/login" className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
             <User size={16} /> Login / Sign Up
           </Link>

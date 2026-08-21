@@ -3,6 +3,7 @@ import { CheckCircle } from 'lucide-react'
 
 export default function JoinAsLawyer() {
   const [submitted, setSubmitted] = useState(false)
+  const [, setQualificationDocument] = useState<File | null>(null)
   const [form, setForm] = useState({
     name: '', email: '', phone: '', city: 'Lahore', gender: 'Male',
     specialization: '', experience: '', barCouncil: ''
@@ -97,6 +98,11 @@ export default function JoinAsLawyer() {
         <div className="form-group">
           <label>Bar Council</label>
           <input name="barCouncil" required value={form.barCouncil} onChange={handleChange} placeholder="e.g. Punjab Bar Council" />
+        </div>
+        <div className="form-group">
+          <label>Law Certificate / Degree</label>
+          <input name="qualificationDocument" type="file" required accept="application/pdf,image/png,image/jpeg" onChange={(e) => setQualificationDocument(e.target.files?.[0] || null)} />
+          <small style={{ color: 'var(--text-muted)' }}>PDF, PNG, or JPG up to 5 MB</small>
         </div>
         <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}>
           Submit Registration

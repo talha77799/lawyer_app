@@ -41,6 +41,15 @@ npm run dev
 
 Open http://localhost:5173
 
+## App download links
+
+Set these Vite environment variables to enable the download buttons on `/download-app`:
+
+```bash
+VITE_ANDROID_APP_URL=https://play.google.com/store/apps/details?id=your-published-app-id
+VITE_IOS_APP_URL=https://apps.apple.com/app/your-app-id
+```
+
 ## Build for Production
 
 ```bash
@@ -48,7 +57,13 @@ npm run build
 ```
 
 Output in `dist/` — ready for web hosting.  
-For Play Store / App Store, wrap with Capacitor or React Native WebView, or migrate to React Native / Flutter.
+The web build is installable as a PWA. Android and iOS builds use the included Capacitor projects in `android/` and `ios/`; publish those builds and set `VITE_ANDROID_APP_URL` and `VITE_IOS_APP_URL` to their store listings.
+
+```bash
+npm run cap:sync
+npm run android:open
+npm run ios:open
+```
 
 ## Project Structure
 

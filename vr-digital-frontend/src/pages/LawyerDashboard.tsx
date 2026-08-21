@@ -1,10 +1,13 @@
 import { appointments, cases, clients, lawyers } from '../data/mockData'
-import { Calendar, Users, Wallet, Star, Clock, Video, MapPin } from 'lucide-react'
+import { Calendar, Users, Wallet, Star, Clock } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { getStoredUser } from '../utils/api'
 
 const lawyer = lawyers[0] // Demo as Adv. Ayesha Khan
 
 export default function LawyerDashboard() {
+  const signedInUser = getStoredUser()
+  const lawyerName = signedInUser?.name || signedInUser?.username || lawyer.name
   const myAppts = appointments.filter(a => a.lawyerId === lawyer.id)
   const myCases = cases.filter(c => c.lawyerId === lawyer.id)
   const upcoming = myAppts.filter(a => a.status === 'upcoming')
@@ -14,21 +17,21 @@ export default function LawyerDashboard() {
     <div className="dashboard-layout">
       <aside className="sidebar">
         <div style={{ padding: '0 0.5rem 1.5rem', borderBottom: '1px solid var(--border)', marginBottom: '1rem' }}>
-          <div style={{ fontWeight: 700 }}>{lawyer.name}</div>
+          <div style={{ fontWeight: 700 }}>{lawyerName}</div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Lawyer Dashboard</div>
         </div>
         <ul className="sidebar-nav">
           <li><a href="#" className="active"><Users size={18} /> Overview</a></li>
-          <li><Link to="/calendar"><Calendar size={18} /> Availability</Link></li>
-          <li><a href="#"><Wallet size={18} /> Wallet & Payouts</a></li>
-          <li><a href="#"><Star size={18} /> Reviews</a></li>
-          <li><a href="#"><Clock size={18} /> My Profile</a></li>
+          <li><Link to="/lawyer/availability"><Calendar size={18} /> Availability</Link></li>
+          <li><Link to="/lawyer/wallet"><Wallet size={18} /> Wallet &amp; Payouts</Link></li>
+          <li><Link to="/lawyer/reviews"><Star size={18} /> Reviews</Link></li>
+          <li><Link to="/lawyer/profile"><Clock size={18} /> My Profile</Link></li>
         </ul>
       </aside>
 
       <main className="dashboard-main">
         <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '1.5rem' }}>
-          Lawyer Dashboard
+          Welcome back, {lawyerName}
         </h1>
 
         <div className="stats-grid">

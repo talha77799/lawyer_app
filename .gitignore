@@ -7,10 +7,10 @@ node_modules/
 .env.*
 !.env.example
 
-# Build output
+# Build files
 dist/
-build/
 **/dist/
+build/
 **/build/
 
 # Logs
@@ -26,7 +26,3 @@ pnpm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
-
-# Temporary files
-*.tmp
-*.temp

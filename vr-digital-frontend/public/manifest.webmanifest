@@ -1,0 +1,17 @@
+{
+  "name": "VR-Digital",
+  "short_name": "VR-Digital",
+  "description": "Find verified lawyers, book appointments, and track legal cases.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#f59e0b",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

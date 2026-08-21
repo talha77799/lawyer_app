@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { lawyers } from '../data/mockData'
-import { Star, MapPin, Clock, CheckCircle, Video, Building, Languages, GraduationCap } from 'lucide-react'
+import { MapPin, Clock, CheckCircle, Video, Building, Languages, GraduationCap } from 'lucide-react'
 
 export default function LawyerProfile() {
   const { id } = useParams()

@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom'
 import { appointments, cases, currentUser, lawyers } from '../data/mockData'
-import { Calendar, FileText, CreditCard, User, Clock, Video, MapPin } from 'lucide-react'
+import { Calendar, FileText, CreditCard, User, Clock, Video, MapPin, ArrowRight } from 'lucide-react'
+import { getStoredUser } from '../utils/api'
 
 export default function ClientDashboard() {
+  const signedInUser = getStoredUser()
+  const clientName = signedInUser?.name || signedInUser?.username || currentUser.name
   const myAppointments = appointments.filter(a => a.clientId === currentUser.id)
   const myCases = cases.filter(c => c.clientId === currentUser.id)
   const upcoming = myAppointments.filter(a => a.status === 'upcoming')
@@ -11,21 +14,21 @@ export default function ClientDashboard() {
     <div className="dashboard-layout">
       <aside className="sidebar">
         <div style={{ padding: '0 0.5rem 1.5rem', borderBottom: '1px solid var(--border)', marginBottom: '1rem' }}>
-          <div style={{ fontWeight: 700 }}>{currentUser.name}</div>
+          <div style={{ fontWeight: 700 }}>{clientName}</div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Client Account</div>
         </div>
         <ul className="sidebar-nav">
           <li><a href="#" className="active"><User size={18} /> Overview</a></li>
           <li><Link to="/calendar"><Calendar size={18} /> Calendar</Link></li>
           <li><Link to="/cases"><FileText size={18} /> My Cases</Link></li>
-          <li><a href="#"><CreditCard size={18} /> Payments</a></li>
+          <li><Link to="/payments"><CreditCard size={18} /> Payments</Link></li>
           <li><Link to="/lawyers"><Clock size={18} /> Book Lawyer</Link></li>
         </ul>
       </aside>
 
       <main className="dashboard-main">
         <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '1.5rem' }}>
-          Welcome back, {currentUser.name.split(' ')[0]}
+          Welcome back, {clientName}
         </h1>
 
         <div className="stats-grid">
@@ -47,6 +50,13 @@ export default function ClientDashboard() {
               Rs. {myAppointments.reduce((s, a) => s + a.fee, 0).toLocaleString()}
             </div>
           </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
+          <Link to="/cases" className="card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span><FileText size={18} color="var(--primary)" /><strong style={{ display: 'block', marginTop: 6 }}>Track cases</strong></span><ArrowRight size={16} /></Link>
+          <Link to="/calendar" className="card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span><Calendar size={18} color="var(--primary)" /><strong style={{ display: 'block', marginTop: 6 }}>View calendar</strong></span><ArrowRight size={16} /></Link>
+          <Link to="/lawyers" className="card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span><User size={18} color="var(--primary)" /><strong style={{ display: 'block', marginTop: 6 }}>Book lawyer</strong></span><ArrowRight size={16} /></Link>
+          <Link to="/payments" className="card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span><CreditCard size={18} color="var(--primary)" /><strong style={{ display: 'block', marginTop: 6 }}>Payments</strong></span><ArrowRight size={16} /></Link>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem' }}>

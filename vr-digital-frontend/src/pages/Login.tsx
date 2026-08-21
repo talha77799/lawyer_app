@@ -8,7 +8,7 @@ type OtpStep = 'email' | 'code'
 
 export default function Login() {
   const navigate = useNavigate()
-  const [role, setRole] = useState<'client' | 'lawyer'>('client')
+  const [role, setRole] = useState<'client' | 'lawyer' | 'admin'>('client')
   const [authMethod, setAuthMethod] = useState<AuthMethod>('otp')
 
   const [email, setEmail] = useState('')
@@ -34,6 +34,13 @@ export default function Login() {
     setMessage('')
   }
 
+  const selectRole = (nextRole: 'client' | 'lawyer' | 'admin') => {
+    setRole(nextRole)
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    clearAlerts()
+  }
+
   // Password login
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,7 +56,7 @@ export default function Login() {
       if (!res.ok || !data.success) throw new Error(data.message || 'Login failed')
       if (data.token) localStorage.setItem('token', data.token)
       if (data.user) localStorage.setItem('user', JSON.stringify(data.user))
-      navigate(data.user?.role === 'lawyer' || role === 'lawyer' ? '/lawyer-dashboard' : '/dashboard')
+      navigate(data.user?.role === 'admin' ? '/admin' : data.user?.role === 'lawyer' || role === 'lawyer' ? '/lawyer-dashboard' : '/dashboard')
     } catch (err: any) {
       setError(err.message || 'Something went wrong')
     } finally {
@@ -57,62 +64,85 @@ export default function Login() {
     }
   }
 
-  // Send OTP
-  const handleSendOtp = async (e?: React.FormEvent) => {
-    e?.preventDefault()
-    clearAlerts()
-    if (!email.trim()) {
-      setError('Please enter your email')
-      return
-    }
-    setLoading(true)
-    try {
-      const res = await fetch(`${API_URL}/auth/otp/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), purpose: 'login' }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.success) throw new Error(data.message || 'Failed to send OTP')
-      setMessage(data.message || 'OTP sent to your email')
-      setOtpStep('code')
-      setOtp(['', '', '', '', '', ''])
-      setCountdown(60)
-      setTimeout(() => otpRefs.current[0]?.focus(), 100)
-    } catch (err: any) {
-      setError(err.message || 'Failed to send OTP')
-    } finally {
-      setLoading(false)
-    }
+// Send OTP
+const handleSendOtp = async (e?: React.FormEvent) => {
+  e?.preventDefault()
+  clearAlerts()
+
+  if (!email.trim()) {
+    setError('Please enter your email')
+    return
   }
 
-  // Verify OTP
-  const handleVerifyOtp = async (e?: React.FormEvent) => {
-    e?.preventDefault()
-    clearAlerts()
-    const code = otp.join('')
-    if (code.length !== 6) {
-      setError('Please enter the 6-digit OTP')
-      return
+  setLoading(true)
+
+  try {
+    const res = await fetch(`${API_URL}/auth/otp/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: email.trim().toLowerCase(),
+        purpose: 'login',
+      }),
+    })
+
+    const data = await res.json()
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || data.message || 'Failed to send OTP')
     }
-    setLoading(true)
-    try {
-      const res = await fetch(`${API_URL}/auth/otp/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), code, purpose: 'login' }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data.success) throw new Error(data.message || 'Invalid OTP')
-      if (data.token) localStorage.setItem('token', data.token)
-      if (data.user) localStorage.setItem('user', JSON.stringify(data.user))
-      navigate(data.user?.role === 'lawyer' || role === 'lawyer' ? '/lawyer-dashboard' : '/dashboard')
-    } catch (err: any) {
-      setError(err.message || 'Verification failed')
-    } finally {
-      setLoading(false)
-    }
+
+    setMessage('OTP sent successfully! Check your email.')
+    setOtpStep('code')
+    setCountdown(60)
+    setOtp(['', '', '', '', '', ''])
+  } catch (err: any) {
+    setError(err.message || 'Failed to send OTP. Please try again.')
+  } finally {
+    setLoading(false)
   }
+}
+
+// Verify OTP
+const handleVerifyOtp = async (e?: React.FormEvent) => {
+  e?.preventDefault()
+  clearAlerts()
+
+  const code = otp.join('')
+  if (code.length !== 6) {
+    setError('Please enter the 6-digit OTP')
+    return
+  }
+
+  setLoading(true)
+
+  try {
+    const res = await fetch(`${API_URL}/auth/otp/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: email.trim().toLowerCase(),
+        code,
+        purpose: 'login',
+      }),
+    })
+
+    const data = await res.json()
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || data.message || 'Invalid OTP')
+    }
+
+    if (data.token) localStorage.setItem('token', data.token)
+    if (data.user) localStorage.setItem('user', JSON.stringify(data.user))
+
+    navigate(data.user?.role === 'admin' ? '/admin' : data.user?.role === 'lawyer' || role === 'lawyer' ? '/lawyer-dashboard' : '/dashboard')
+  } catch (err: any) {
+    setError(err.message || 'Verification failed')
+  } finally {
+    setLoading(false)
+  }
+}
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return
@@ -153,13 +183,16 @@ export default function Login() {
         </p>
 
         {/* Role */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: '1rem' }}>
-          <button type="button" className={`btn ${role === 'client' ? 'btn-primary' : 'btn-outline'}`} style={{ flex: 1, justifyContent: 'center' }} onClick={() => setRole('client')}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: '1rem' }}>
+            <button type="button" className={`btn ${role === 'client' ? 'btn-primary' : 'btn-outline'}`} style={{ flex: 1, justifyContent: 'center' }} onClick={() => selectRole('client')}>
             Client
           </button>
-          <button type="button" className={`btn ${role === 'lawyer' ? 'btn-primary' : 'btn-outline'}`} style={{ flex: 1, justifyContent: 'center' }} onClick={() => setRole('lawyer')}>
+            <button type="button" className={`btn ${role === 'lawyer' ? 'btn-primary' : 'btn-outline'}`} style={{ flex: 1, justifyContent: 'center' }} onClick={() => selectRole('lawyer')}>
             Lawyer
           </button>
+            <button type="button" className={`btn ${role === 'admin' ? 'btn-primary' : 'btn-outline'}`} style={{ flex: 1, justifyContent: 'center' }} onClick={() => selectRole('admin')}>
+              Admin
+            </button>
         </div>
 
         {/* Method */}
@@ -180,7 +213,7 @@ export default function Login() {
           <form onSubmit={handleSendOtp}>
             <div className="form-group">
               <label>Email</label>
-              <input type="email" required placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input type="email" required placeholder={role === 'admin' ? 'owner@company.com' : 'you@email.com'} value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}>
               {loading ? 'Sending...' : 'Send OTP'}
@@ -232,7 +265,7 @@ export default function Login() {
           <form onSubmit={handlePasswordSubmit}>
             <div className="form-group">
               <label>Email</label>
-              <input type="email" required placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input type="email" required placeholder={role === 'admin' ? 'owner@company.com' : 'you@email.com'} value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="form-group">
               <label>Password</label>
