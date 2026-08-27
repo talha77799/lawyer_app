@@ -1,0 +1,23 @@
+{
+  "name": "WakeelHub",
+  "short_name": "WakeelHub",
+  "description": "Find verified lawyers, book appointments, and track legal cases.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2d4255",
+  "icons": [
+    {
+      "src": "/wakeelhub-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/image.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
