@@ -10,7 +10,7 @@ export default function KnowledgeChatbot({ role }: { role: ChatRole }) {
   const [question, setQuestion] = useState('')
   const [loading, setLoading] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: 1, from: 'bot', text: `Hi. I can help with your ${role} portal and common platform questions.` },
+    { id: 1, from: 'bot', text: `Hello! 👋 I'm your friendly WakeelHub Companion! How can I help you today? 😊` },
   ])
 
   const ask = async (text: string) => {

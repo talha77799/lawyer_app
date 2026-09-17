@@ -24,17 +24,33 @@ const pick = (body, fields) => fields.reduce((result, field) => {
 }, {});
 
 export const getOverview = async (req, res) => {
-  const [users, lawyers, clients, appointments, cases, reviews, wallets] = await Promise.all([
-    User.countDocuments(), User.countDocuments({ role: 'lawyer' }), User.countDocuments({ role: 'client' }),
+  // Only count users who completed OTP verification (emailVerified: true)
+  const verifiedFilter = { emailVerified: { $ne: false } };
+  const [users, lawyers, clients, pendingUsers, appointments, cases, reviews, wallets] = await Promise.all([
+    User.countDocuments(verifiedFilter),
+    User.countDocuments({ ...verifiedFilter, role: 'lawyer' }),
+    User.countDocuments({ ...verifiedFilter, role: 'client' }),
+    User.countDocuments({ emailVerified: false }),
     Appointment.countDocuments(), Case.countDocuments(), Review.countDocuments(), Wallet.countDocuments(),
   ]);
-  res.json({ success: true, stats: { users, lawyers, clients, appointments, cases, reviews, wallets } });
+  res.json({ success: true, stats: { users, lawyers, clients, pendingUsers, appointments, cases, reviews, wallets } });
 };
 
 export const listResource = async (req, res) => {
   const Model = resources[req.params.resource];
   if (!Model) return res.status(404).json({ success: false, message: 'Unknown admin resource' });
-  const query = req.params.resource === 'users' && req.query.role ? { role: req.query.role } : {};
+  let query = {};
+  if (req.params.resource === 'users') {
+    // By default, only show verified (OTP-completed) users
+    // Admin can pass ?showPending=true to also see unverified users
+    if (req.query.showPending === 'true') {
+      query = req.query.role ? { role: req.query.role } : {};
+    } else {
+      query = req.query.role
+        ? { role: req.query.role, emailVerified: { $ne: false } }
+        : { emailVerified: { $ne: false } };
+    }
+  }
   let recordsQuery = Model.find(query).sort({ createdAt: -1 }).limit(200);
   if (req.params.resource === 'appointments') {
     recordsQuery = recordsQuery

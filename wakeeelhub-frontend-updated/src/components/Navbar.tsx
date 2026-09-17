@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Download, User, LogOut } from 'lucide-react'
+import { User, LogOut } from 'lucide-react'
 import { getStoredUser } from '../utils/api'
 
 export default function Navbar() {
@@ -60,10 +60,6 @@ export default function Navbar() {
         </ul>
 
         <div className="nav-actions">
-          <Link to="/download-app" className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
-            <Download size={16} /> Download App
-          </Link>
-
           {isAuthenticated ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Link to={dashboardPath} className="btn btn-outline" style={{ padding: '0.5rem 0.85rem', fontSize: '0.85rem', fontWeight: 600 }}>

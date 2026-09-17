@@ -7,15 +7,35 @@ Lawyers can manage their public profile, profile photo, specializations, availab
 The platform is not a law firm. Never claim to be a lawyer, never invent Pakistani law or a case outcome, and never provide definitive legal advice. Give general educational information only and recommend consulting a licensed lawyer for legal decisions. For emergencies, tell the user to contact local emergency services or the relevant authorities.
 `;
 
-const localAnswer = (question, role) => {
+const localAnswer = (question, role, userName = '') => {
   const text = question.toLowerCase();
-  if (text.includes('book') || text.includes('appointment')) return 'To book a consultation, open Find Lawyers, choose a profile, select an available slot, and complete the PayFast payment. Keep the PayFast transaction ID for your records.';
-  if (text.includes('payfast') || text.includes('payment')) return 'Consultation payments are made through PayFast. Keep your transaction ID and contact support with the appointment date if a payment is not reflected.';
-  if (text.includes('case') || text.includes('hearing')) return 'Open My Cases or Track Case to see your case status, progress, filing date, and next hearing. The Calendar also displays important case dates.';
-  if (text.includes('otp') || text.includes('login') || text.includes('sign in')) return 'Enter the email registered to your account, request one Email OTP, and enter the six-digit code. The code expires after 10 minutes.';
-  if (role === 'lawyer' && (text.includes('payout') || text.includes('wallet'))) return 'Open Wallet & Payouts to review your available balance and submit a payout request. Keep your payment details current in My Profile.';
-  if (text.includes('lawyer') || text.includes('find')) return 'Use Find Lawyers to compare city, specialization, rating, experience, availability, and consultation fee before booking.';
-  return `I can help with ${role === 'lawyer' ? 'your profile, availability, appointments, cases, wallet, or payouts' : 'finding a lawyer, booking, PayFast payments, OTP sign-in, cases, or the calendar'}. Ask me a specific question.`;
+  const nameGreeting = userName ? ` ${userName}` : '';
+
+  if (text.includes('hi') || text.includes('hello') || text.includes('hey') || text.includes('aoa') || text.includes('assalam')) {
+    return `Hello${nameGreeting}! 😊 I'm your friendly WakeelHub Assistant! I'm so happy to chat with you today. How can I brighten your day and help with your ${role === 'lawyer' ? 'lawyer portal' : 'legal journey'}? 🌸✨`;
+  }
+  if (text.includes('thank') || text.includes('thanks')) {
+    return `You're most welcome${nameGreeting}! 🥰 I'm always here to help you whenever you need anything. Have a wonderful day! 💖`;
+  }
+  if (text.includes('book') || text.includes('appointment')) {
+    return `Booking a consultation is super easy and smooth! 🗓️✨ Simply navigate to **Find Lawyers**, choose your preferred advocate, pick a convenient time slot, and complete payment securely via PayFast. I'm sure you'll find the perfect lawyer! 🤗`;
+  }
+  if (text.includes('payfast') || text.includes('payment')) {
+    return `All payments on WakeelHub are processed safely and instantly through PayFast 💳. Just keep your transaction ID handy for reference. If you ever need help with a payment, our support team is always here for you! ❤️`;
+  }
+  if (text.includes('case') || text.includes('hearing')) {
+    return `You can easily keep track of all your legal cases and upcoming court hearings under **My Cases** or **Track Case** 📂. We make sure you never miss an important update! 🌟`;
+  }
+  if (text.includes('otp') || text.includes('login') || text.includes('sign in')) {
+    return `Signing in is quick and secure! 🔐 Just enter your registered email address, click **Send OTP**, and check your inbox for the 6-digit code. Need a hand? I'm right here! 😊`;
+  }
+  if (role === 'lawyer' && (text.includes('payout') || text.includes('wallet'))) {
+    return `To view your earnings or request a payout, just pop over to **Wallet & Payouts** 💼💰. Thank you for being such a valuable part of the WakeelHub advocate network! 🌟`;
+  }
+  if (text.includes('lawyer') || text.includes('find')) {
+    return `Looking for legal advice? ⚖️ Head over to **Find Lawyers** where you can explore verified top lawyers by city, specialization, experience, and ratings to find your perfect match! ✨`;
+  }
+  return `I'm always here to help you${nameGreeting}! 😊 Feel free to ask me anything about finding lawyers, booking consultations, tracking cases, or using your ${role} dashboard. What would you like to know? 🌸`;
 };
 
 const callGemini = async (question, history, userContext) => {
@@ -33,9 +53,24 @@ const callGemini = async (question, history, userContext) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: `You are Wakeel Hub Assistant.\n${knowledgeBase}\nUser context: ${userContext}\nAnswer clearly in 2-5 short paragraphs or bullets. Use the user's context only when relevant. If a question needs legal advice, explain the general concept and recommend a licensed lawyer.` }] },
+      systemInstruction: {
+        parts: [{
+          text: `You are WakeelHub's friendly, warm, empathetic, and lovely AI Companion & Assistant. 🌸✨
+Your mission is to make every user feel truly cared for, supported, respected, and delighted.
+Use a warm, sweet, polite, encouraging, and conversational tone with cheerful formatting and friendly emojis (e.g. 😊, ✨, 🌸, 💼, 🤝, 💖) where appropriate.
+
+${knowledgeBase}
+User context: ${userContext}
+
+Guidelines:
+- Address the user warmly using their name when available.
+- Be deeply empathetic, friendly, lovely, and reassuring.
+- Keep answers clear, beautifully formatted, concise, and helpful.
+- If a user asks for legal advice, gently explain the concept in simple terms and warmly suggest booking a consultation with one of our expert licensed lawyers on WakeelHub.`
+        }]
+      },
       contents,
-      generationConfig: { temperature: 0.25, maxOutputTokens: 500 },
+      generationConfig: { temperature: 0.7, maxOutputTokens: 500 },
     }),
   });
   const data = await response.json();
@@ -56,7 +91,7 @@ export const chat = async (req, res) => {
       Appointment.countDocuments({ ...query, status: 'upcoming' }),
     ]);
     const userContext = `Role: ${req.user.role}; name: ${req.user.name}; active cases: ${caseCount}; upcoming appointments: ${upcomingAppointments}`;
-    const answer = await callGemini(message.trim(), history, userContext) || localAnswer(message.trim(), req.user.role);
+    const answer = await callGemini(message.trim(), history, userContext) || localAnswer(message.trim(), req.user.role, req.user.name);
     res.json({ success: true, data: { answer, source: process.env.GEMINI_API_KEY ? 'llm' : 'knowledge-base' } });
   } catch (err) {
     console.error('chat error:', err);

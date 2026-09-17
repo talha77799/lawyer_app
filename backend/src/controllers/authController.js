@@ -27,32 +27,53 @@ export const register = async (req, res) => {
     if (role === 'lawyer' && (!bankProvider?.trim() || !bankAccountNumber?.trim())) {
       return res.status(400).json({ success: false, message: 'A lawyer payment provider and account number are required for registration' });
     }
-    const exists = await User.findOne({ email });
-    if (exists) {
-      return res.status(400).json({ success: false, message: 'Email already registered' });
+    let user = await User.findOne({ email });
+    if (user) {
+      if (user.emailVerified) {
+        return res.status(400).json({ success: false, message: 'Email already registered and verified. Please sign in.' });
+      }
+      // If user registered but did not verify OTP, update their details and re-trigger OTP verification
+      user.name = name;
+      user.password = password;
+      user.phone = phone;
+      user.role = role === 'lawyer' ? 'lawyer' : 'client';
+      user.city = city || '';
+      user.education = education?.trim() || '';
+      user.matricSchool = matricSchool?.trim() || '';
+      user.intermediateCollege = intermediateCollege?.trim() || '';
+      user.lawInstitution = lawInstitution?.trim() || '';
+      user.casesHandled = role === 'lawyer' ? Number(casesHandled) || 0 : 0;
+      user.casesCleared = role === 'lawyer' ? Number(casesCleared) || 0 : 0;
+      user.bankAccountNumber = role === 'lawyer' ? bankAccountNumber.trim() : '';
+      user.bankProvider = role === 'lawyer' ? bankProvider.trim() : '';
+      if (avatarFile) user.avatar = `/uploads/qualifications/${avatarFile.filename}`;
+      if (qualificationFile) user.qualificationDocument = `/uploads/qualifications/${qualificationFile.filename}`;
+      await user.save();
+    } else {
+      user = await User.create({
+        name,
+        email,
+        emailVerified: false,
+        password,
+        phone,
+        role: role === 'lawyer' ? 'lawyer' : 'client',
+        city: city || '',
+        education: education?.trim() || '',
+        matricSchool: matricSchool?.trim() || '',
+        intermediateCollege: intermediateCollege?.trim() || '',
+        lawInstitution: lawInstitution?.trim() || '',
+        casesHandled: role === 'lawyer' ? Number(casesHandled) || 0 : 0,
+        casesCleared: role === 'lawyer' ? Number(casesCleared) || 0 : 0,
+        bankAccountNumber: role === 'lawyer' ? bankAccountNumber.trim() : '',
+        bankProvider: role === 'lawyer' ? bankProvider.trim() : '',
+        avatar: avatarFile ? `/uploads/qualifications/${avatarFile.filename}` : '',
+        qualificationDocument: qualificationFile ? `/uploads/qualifications/${qualificationFile.filename}` : '',
+      });
     }
-    const user = await User.create({
-      name,
-      email,
-      emailVerified: false,
-      password,
-      phone,
-      role: role === 'lawyer' ? 'lawyer' : 'client',
-      city: city || '',
-      education: education?.trim() || '',
-      matricSchool: matricSchool?.trim() || '',
-      intermediateCollege: intermediateCollege?.trim() || '',
-      lawInstitution: lawInstitution?.trim() || '',
-      casesHandled: role === 'lawyer' ? Number(casesHandled) || 0 : 0,
-      casesCleared: role === 'lawyer' ? Number(casesCleared) || 0 : 0,
-      bankAccountNumber: role === 'lawyer' ? bankAccountNumber.trim() : '',
-      bankProvider: role === 'lawyer' ? bankProvider.trim() : '',
-      avatar: avatarFile ? `/uploads/qualifications/${avatarFile.filename}` : '',
-      qualificationDocument: qualificationFile ? `/uploads/qualifications/${qualificationFile.filename}` : '',
-    });
+
     res.status(201).json({
       success: true,
-      message: 'Registration created. Verify your email to continue.',
+      message: 'Registration created. Please enter the OTP code sent to your email to verify and complete your registration.',
       requiresVerification: true,
       email: user.email,
     });

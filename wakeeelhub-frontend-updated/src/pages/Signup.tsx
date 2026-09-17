@@ -116,9 +116,6 @@ export default function Signup() {
         throw new Error(data.message || 'Unable to create your account')
       }
 
-      if (data.token) localStorage.setItem('token', data.token)
-      if (data.user) localStorage.setItem('user', JSON.stringify(data.user))
-
       navigate('/signup/otp', {
         state: { email: form.email.trim().toLowerCase(), role },
       })

@@ -28,7 +28,7 @@ import {
 import { apiRequest, getStoredUser } from '../utils/api'
 
 type Resource = 'users' | 'appointments' | 'cases' | 'reviews' | 'wallets' | 'availability'
-type UserRole = 'all' | 'lawyer' | 'client' | 'admin'
+type UserRole = 'all' | 'lawyer' | 'client' | 'admin' | 'pending'
 type RecordValue = Record<string, any>
 
 const resourceLabels: Record<Resource, string> = {
@@ -64,11 +64,15 @@ export default function AdminDashboard() {
   const [selectedUserModal, setSelectedUserModal] = useState<RecordValue | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
 
-  const load = async (selected: Resource = resource) => {
+  const load = async (selected: Resource = resource, roleFilter: UserRole = userRoleFilter) => {
     try {
+      let listingUrl = `/admin/${selected}`
+      if (selected === 'users' && roleFilter === 'pending') {
+        listingUrl += '?showPending=true'
+      }
       const [overview, listing] = await Promise.all([
         apiRequest('/admin/overview'),
-        apiRequest(`/admin/${selected}`)
+        apiRequest(listingUrl)
       ])
       setStats(overview.stats || {})
       setRecords(listing.records || [])
@@ -79,8 +83,8 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
-    if (user?.role === 'admin') load()
-  }, [resource])
+    if (user?.role === 'admin') load(resource, userRoleFilter)
+  }, [resource, userRoleFilter])
 
   const update = async (id: string, updates: RecordValue) => {
     try {
@@ -134,6 +138,7 @@ export default function AdminDashboard() {
     users: Users,
     lawyers: BriefcaseBusiness,
     clients: Users,
+    pendingUsers: Clock,
     appointments: Calendar,
     cases: FileText,
     reviews: BarChart3,
@@ -144,9 +149,14 @@ export default function AdminDashboard() {
   const filteredRecords = records.filter((rec) => {
     if (resource !== 'users') return true
 
-    // Role filter
-    if (userRoleFilter !== 'all' && rec.role !== userRoleFilter) {
-      return false
+    // Pending filter: show only unverified users
+    if (userRoleFilter === 'pending') {
+      if (rec.emailVerified !== false) return false
+    } else {
+      // Role filter
+      if (userRoleFilter !== 'all' && rec.role !== userRoleFilter) {
+        return false
+      }
     }
 
     // Search filter
@@ -290,7 +300,7 @@ export default function AdminDashboard() {
         <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
           {Object.keys(metricIcons).map((key) => {
             const Icon = metricIcons[key]
-            const labelTitle = key === 'users' ? 'Total Users' : key.charAt(0).toUpperCase() + key.slice(1)
+            const labelTitle = key === 'users' ? 'Total Users' : key === 'pendingUsers' ? 'Pending Registrations' : key.charAt(0).toUpperCase() + key.slice(1)
             return (
               <div className="stat-card" key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
@@ -434,6 +444,26 @@ export default function AdminDashboard() {
                   >
                     <Shield size={13} /> Admins ({countAdmins})
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setUserRoleFilter('pending')}
+                    style={{
+                      border: 0,
+                      padding: '0.35rem 0.65rem',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      background: userRoleFilter === 'pending' ? '#fff' : 'transparent',
+                      color: userRoleFilter === 'pending' ? '#b45309' : 'var(--text-muted)',
+                      boxShadow: userRoleFilter === 'pending' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none'
+                    }}
+                  >
+                    <Clock size={13} /> Pending ({stats.pendingUsers ?? 0})
+                  </button>
                 </div>
               </div>
             )}
@@ -558,8 +588,13 @@ export default function AdminDashboard() {
                             {renderRoleBadge(record.role)}
                           </div>
 
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.75rem' }}>
-                            {isLawyer && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', flexWrap: 'wrap' }}>
+                            {record.emailVerified === false && (
+                              <span style={{ color: '#b45309', display: 'inline-flex', alignItems: 'center', gap: 3, fontWeight: 600 }}>
+                                <Clock size={12} /> OTP Pending
+                              </span>
+                            )}
+                            {isLawyer && record.emailVerified !== false && (
                               record.verified ? (
                                 <span style={{ color: '#16a34a', display: 'inline-flex', alignItems: 'center', gap: 3, fontWeight: 600 }}>
                                   <CheckCircle2 size={12} /> Verified Lawyer
@@ -570,7 +605,7 @@ export default function AdminDashboard() {
                                 </span>
                               )
                             )}
-                            {isClient && (
+                            {isClient && record.emailVerified !== false && (
                               <span style={{ color: 'var(--text-muted)' }}>Registered Client</span>
                             )}
                           </div>
