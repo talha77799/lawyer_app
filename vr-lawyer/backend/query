@@ -1,0 +1,2 @@
+cd F:\vr-lawyer\vr-lawyer\backend
+cat src\config\db.mongo.js

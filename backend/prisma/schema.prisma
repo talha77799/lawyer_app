@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String        @id @default(uuid())
+  name                  String
+  email                 String        @unique
+  emailVerified         Boolean       @default(true)
+  phone                 String?
+  password              String
+  role                  String        @default("client") // client, lawyer, admin
+  city                  String        @default("")
+  avatar                String        @default("")
+  isActive              Boolean       @default(true)
+  specialization        String[]
+  experience            Int           @default(0)
+  fee                   Int           @default(0)
+  verified              Boolean       @default(false)
+  online                Boolean       @default(false)
+  bio                   String        @default("")
+  languages             String[]
+  education             String        @default("")
+  matricSchool          String        @default("")
+  intermediateCollege   String        @default("")
+  lawInstitution        String        @default("")
+  casesHandled          Int           @default(0)
+  casesCleared          Int           @default(0)
+  bankProvider          String        @default("")
+  bankAccountNumber     String        @default("")
+  qualificationDocument String        @default("")
+  barCouncil            String        @default("")
+  location              String        @default("")
+  availability          String[]
+  rating                Float         @default(0)
+  reviewsCount          Int           @default(0)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  clientAppointments    Appointment[] @relation("ClientAppointments")
+  lawyerAppointments    Appointment[] @relation("LawyerAppointments")
+  clientCases           Case[]        @relation("ClientCases")
+  lawyerCases           Case[]        @relation("LawyerCases")
+  clientReviews         Review[]      @relation("ClientReviews")
+  lawyerReviews         Review[]      @relation("LawyerReviews")
+  lawyerAvailability    Availability? @relation("LawyerAvailability")
+  wallet                Wallet?       @relation("UserWallet")
+}
+
+model Appointment {
+  id               String       @id @default(uuid())
+  lawyerId         String
+  clientId         String
+  lawyerName       String
+  clientName       String
+  caseName         String       @default("")
+  date             String       // YYYY-MM-DD
+  time             String       // HH:mm
+  type             String       @default("video") // video, in-person
+  status           String       @default("upcoming") // upcoming, completed, cancelled
+  fee              Int
+  paymentStatus    String       @default("pending") // paid, pending, failed
+  paymentProvider  String       @default("")
+  paymentReference String       @default("")
+  notes            String       @default("")
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  lawyer           User         @relation("LawyerAppointments", fields: [lawyerId], references: [id])
+  client           User         @relation("ClientAppointments", fields: [clientId], references: [id])
+  reviews          Review[]
+  transactions     Transaction[]
+}
+
+model Availability {
+  id          String   @id @default(uuid())
+  lawyerId    String   @unique
+  feeVideo    Int      @default(0)
+  feeInPerson Int      @default(0)
+  cities      String[]
+  schedule    Json     // Store days and slots as JSONB in Postgres
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lawyer      User     @relation("LawyerAvailability", fields: [lawyerId], references: [id])
+}
+
+model Case {
+  id          String   @id @default(uuid())
+  title       String
+  clientId    String
+  lawyerId    String
+  status      String   @default("filed") // filed, hearing, judgment, closed
+  progress    Int      @default(0)
+  filedDate   String
+  nextHearing String?
+  description String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  client      User     @relation("ClientCases", fields: [clientId], references: [id])
+  lawyer      User     @relation("LawyerCases", fields: [lawyerId], references: [id])
+}
+
+model Otp {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  purpose   String   @default("verify") // login, register, reset, verify
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+model Review {
+  id            String   @id @default(uuid())
+  lawyerId      String
+  clientId      String
+  appointmentId String?
+  rating        Int
+  comment       String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  lawyer        User         @relation("LawyerReviews", fields: [lawyerId], references: [id])
+  client        User         @relation("ClientReviews", fields: [clientId], references: [id])
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+
+  @@unique([lawyerId, clientId])
+}
+
+model Wallet {
+  id           String        @id @default(uuid())
+  userId       String        @unique
+  balance      Int           @default(0)
+  currency     String        @default("PKR")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  user         User          @relation("UserWallet", fields: [userId], references: [id])
+  transactions Transaction[]
+}
+
+model Transaction {
+  id            String       @id @default(uuid())
+  walletId      String
+  type          String       // credit, debit, payout
+  amount        Int
+  description   String       @default("")
+  appointmentId String?
+  status        String       @default("completed") // pending, completed, failed
+  createdAt     DateTime     @default(now())
+
+  wallet        Wallet       @relation(fields: [walletId], references: [id])
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+}
