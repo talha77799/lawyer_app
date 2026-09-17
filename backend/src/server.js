@@ -39,12 +39,13 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json());
 app.use('/uploads', express.static(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../uploads')));
 
-// Rate limit auth + OTP endpoints specifically — these are the brute-force/spam targets.
+// Rate limit auth + OTP endpoints specifically — skip /me polling endpoint
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 20,
+  limit: 200,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.path === '/me',
   message: { success: false, message: 'Too many requests, please try again later.' },
 });
 app.use('/api/auth', authLimiter);
