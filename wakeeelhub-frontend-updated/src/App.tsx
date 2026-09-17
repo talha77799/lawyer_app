@@ -27,6 +27,7 @@ import { getStoredUser } from './utils/api'
 function App() {
   const isAuthenticated = !!localStorage.getItem('token')
   const signedInUser = getStoredUser()
+  const isUnverifiedLawyer = signedInUser?.role === 'lawyer' && !signedInUser?.verified
   const dashboard = signedInUser?.role === 'lawyer' ? <LawyerDashboard /> : <ClientDashboard />
 
   return (
@@ -45,10 +46,10 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/signup/otp" element={<SignupOtp />} />
         <Route path="/cases" element={<CaseTracker />} />
-        <Route path="/lawyer/availability" element={<Availability />} />
-        <Route path="/lawyer/wallet" element={<WalletPayouts />} />
-        <Route path="/lawyer/reviews" element={<Reviews />} />
-        <Route path="/lawyer/profile" element={<MyProfile />} />
+        <Route path="/lawyer/availability" element={isUnverifiedLawyer ? <LawyerDashboard /> : <Availability />} />
+        <Route path="/lawyer/wallet" element={isUnverifiedLawyer ? <LawyerDashboard /> : <WalletPayouts />} />
+        <Route path="/lawyer/reviews" element={isUnverifiedLawyer ? <LawyerDashboard /> : <Reviews />} />
+        <Route path="/lawyer/profile" element={isUnverifiedLawyer ? <LawyerDashboard /> : <MyProfile />} />
         <Route path="/client/profile" element={<ClientProfile />} />
         <Route path="/payments" element={<Payments />} />
         <Route path="/download-app" element={<DownloadApp />} />

@@ -95,9 +95,6 @@ export const login = async (req, res) => {
     if (!user.emailVerified) {
       return res.status(403).json({ success: false, message: 'Please verify your email before logging in' });
     }
-    if (user.role === 'lawyer' && !user.verified) {
-      return res.status(403).json({ success: false, message: 'Your lawyer application is still under review. We\'ll email you once it\'s approved.' });
-    }
     const token = generateToken(user._id);
     res.json({
       success: true,

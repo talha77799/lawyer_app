@@ -123,9 +123,6 @@ export const verifyOtp = async (req, res) => {
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
-      if (user.role === 'lawyer' && !user.verified) {
-        return res.status(403).json({ success: false, message: 'Your lawyer application is still under review. We\'ll email you once it\'s approved.' });
-      }
       const token = generateToken(user._id);
       return res.json({
         success: true,

@@ -1,17 +1,47 @@
+import { useEffect, useState } from 'react'
 import { appointments, cases, clients, lawyers } from '../data/mockData'
-import { Calendar, Users, Wallet, Star, Clock, LogOut } from 'lucide-react'
+import { Calendar, Users, Wallet, Star, Clock, LogOut, Check } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getAssetUrl, getStoredUser } from '../utils/api'
+import { apiRequest, getAssetUrl, getStoredUser } from '../utils/api'
 import KnowledgeChatbot from '../components/KnowledgeChatbot'
 
 const lawyer = lawyers[0] // Demo as Adv. Ayesha Khan
 
 export default function LawyerDashboard() {
   const navigate = useNavigate()
-  const signedInUser = getStoredUser()
+  const [signedInUser, setSignedInUser] = useState<any>(getStoredUser())
+  const [checking, setChecking] = useState(false)
+
+  const checkVerificationStatus = async () => {
+    try {
+      setChecking(true)
+      const res = await apiRequest('/auth/me')
+      if (res.user) {
+        setSignedInUser(res.user)
+        localStorage.setItem('user', JSON.stringify(res.user))
+      }
+    } catch (err) {
+      console.error('Failed to update user profile:', err)
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  useEffect(() => {
+    // Initial fetch of user status
+    checkVerificationStatus()
+
+    // Poll every 5 seconds until verified
+    const timer = setInterval(() => {
+      checkVerificationStatus()
+    }, 5000)
+
+    return () => clearInterval(timer)
+  }, [])
+
   const lawyerName = signedInUser?.name || signedInUser?.username || lawyer.name
   const lawyerAvatar = getAssetUrl(signedInUser?.avatar)
-  const lawyerInitials = lawyerName.split(' ').map((part: string) => part[0]).slice(0, 2).join('').toUpperCase()
+  const lawyerInitials = lawyerName.split(' ').map((part: string) => part[0]).slice(0, 2).join('').toUpperCase() || 'L'
   const myAppts = appointments.filter(a => a.lawyerId === lawyer.id)
   const myCases = cases.filter(c => c.lawyerId === lawyer.id)
   const upcoming = myAppts.filter(a => a.status === 'upcoming')
@@ -22,6 +52,151 @@ export default function LawyerDashboard() {
     localStorage.removeItem('user')
     navigate('/login')
     window.location.reload()
+  }
+
+  // If lawyer is not yet verified by Admin, display the pending screen
+  if (signedInUser?.role === 'lawyer' && !signedInUser?.verified) {
+    return (
+      <div
+        style={{
+          minHeight: '85vh',
+          backgroundColor: '#0d131f',
+          color: '#f8fafc',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2.5rem 1.25rem',
+          fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
+        }}
+      >
+        <div
+          style={{
+            width: '100%',
+            maxWidth: '440px',
+            backgroundColor: '#161f30',
+            borderRadius: '16px',
+            padding: '2.5rem 2rem',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            textAlign: 'left'
+          }}
+        >
+          {/* Circular Check Icon with Gold Border */}
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              border: '1.5px solid #d97706',
+              display: 'grid',
+              placeItems: 'center',
+              marginBottom: '1.5rem',
+              backgroundColor: 'rgba(217, 119, 6, 0.08)'
+            }}
+          >
+            <Check size={24} color="#f59e0b" strokeWidth={2.5} />
+          </div>
+
+          {/* Heading */}
+          <h1
+            style={{
+              fontSize: '1.75rem',
+              fontWeight: 700,
+              color: '#ffffff',
+              marginBottom: '0.75rem',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.25
+            }}
+          >
+            Profile created
+          </h1>
+
+          {/* Subheading text */}
+          <p
+            style={{
+              color: '#94a3b8',
+              fontSize: '0.95rem',
+              lineHeight: '1.55',
+              marginBottom: '1.75rem'
+            }}
+          >
+            Your enrollment has been received and your profile is now on file with Counsel Registry Pakistan.
+          </p>
+
+          {/* Verification Box with Left Border Accent */}
+          <div
+            style={{
+              backgroundColor: '#0f172a',
+              borderLeft: '4px solid #d97706',
+              borderRadius: '8px',
+              padding: '1.25rem 1.25rem',
+              marginBottom: '2rem'
+            }}
+          >
+            <h3
+              style={{
+                fontSize: '1.05rem',
+                fontWeight: 700,
+                color: '#f8fafc',
+                marginBottom: '0.4rem'
+              }}
+            >
+              Verification in progress
+            </h3>
+            <p
+              style={{
+                color: '#94a3b8',
+                fontSize: '0.875rem',
+                lineHeight: '1.5',
+                margin: 0
+              }}
+            >
+              We're confirming your enrollment with the Bar Council and will notify you within 2 working days.
+            </p>
+          </div>
+
+          {/* Done / Check Status Button */}
+          <button
+            type="button"
+            onClick={checkVerificationStatus}
+            disabled={checking}
+            style={{
+              width: '100%',
+              padding: '0.85rem',
+              backgroundColor: '#1e293b',
+              color: '#ffffff',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '8px',
+              fontSize: '1rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              textAlign: 'center',
+              outline: 'none'
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#334155')}
+            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#1e293b')}
+          >
+            {checking ? 'Checking Status...' : 'Done'}
+          </button>
+
+          {/* Auto status & Logout footer */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.25rem', fontSize: '0.8rem', color: '#64748b' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#f59e0b', display: 'inline-block' }} />
+              Checking verification status...
+            </span>
+            <button
+              type="button"
+              onClick={handleLogout}
+              style={{ background: 'none', border: 0, color: '#ef4444', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
