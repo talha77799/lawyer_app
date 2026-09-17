@@ -13,6 +13,7 @@ export default function Navbar() {
   const isLawyer = storedRole === 'lawyer' || location.pathname === '/lawyer-dashboard' || location.pathname.startsWith('/lawyer/')
   const isAdmin = storedRole === 'admin' || location.pathname === '/admin' || location.pathname.startsWith('/admin/')
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/signup/otp' || location.pathname === '/join-as-lawyer' || (!isAuthenticated && location.pathname === '/')
+  const isUnverifiedLawyer = isLawyer && user?.verified === false
 
   const isActive = (path: string) => (location.pathname === path ? 'active' : '')
 
@@ -42,7 +43,7 @@ export default function Navbar() {
           )}
 
           {/* Lawyer specific links when authenticated */}
-          {isAuthenticated && !isAuthPage && isLawyer && (
+          {isAuthenticated && !isAuthPage && isLawyer && !isUnverifiedLawyer && (
             <>
               <li><Link to="/lawyer/availability" className={isActive('/lawyer/availability')}>Availability</Link></li>
               <li><Link to="/lawyer/wallet" className={isActive('/lawyer/wallet')}>Wallet</Link></li>
@@ -51,7 +52,7 @@ export default function Navbar() {
           )}
 
           {/* Calendar & Dashboard: ONLY show when authenticated AND NOT on signup/signin/auth pages */}
-          {isAuthenticated && !isAuthPage && (
+          {isAuthenticated && !isAuthPage && !isUnverifiedLawyer && (
             <>
               <li><Link to="/calendar" className={isActive('/calendar')}>Calendar</Link></li>
               <li><Link to={dashboardPath} className={isActive(dashboardPath)}>Dashboard</Link></li>
