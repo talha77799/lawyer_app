@@ -8,7 +8,7 @@ export const register = async (req, res) => {
       name, email, password, phone, role, city, education,
       matricSchool, intermediateCollege, lawInstitution, casesHandled, casesCleared,
       bankAccountNumber,
-      bankProvider,
+      bankProvider, experienceYears,
     } = req.body;
     const qualificationFile = req.files?.qualificationDocument?.[0];
     const avatarFile = req.files?.avatar?.[0];
@@ -44,6 +44,7 @@ export const register = async (req, res) => {
       user.lawInstitution = lawInstitution?.trim() || '';
       user.casesHandled = role === 'lawyer' ? Number(casesHandled) || 0 : 0;
       user.casesCleared = role === 'lawyer' ? Number(casesCleared) || 0 : 0;
+      user.experience = role === 'lawyer' ? Number(experienceYears) || 0 : 0;
       user.bankAccountNumber = role === 'lawyer' ? bankAccountNumber.trim() : '';
       user.bankProvider = role === 'lawyer' ? bankProvider.trim() : '';
       if (avatarFile) user.avatar = `/uploads/qualifications/${avatarFile.filename}`;
@@ -64,6 +65,7 @@ export const register = async (req, res) => {
         lawInstitution: lawInstitution?.trim() || '',
         casesHandled: role === 'lawyer' ? Number(casesHandled) || 0 : 0,
         casesCleared: role === 'lawyer' ? Number(casesCleared) || 0 : 0,
+        experience: role === 'lawyer' ? Number(experienceYears) || 0 : 0,
         bankAccountNumber: role === 'lawyer' ? bankAccountNumber.trim() : '',
         bankProvider: role === 'lawyer' ? bankProvider.trim() : '',
         avatar: avatarFile ? `/uploads/qualifications/${avatarFile.filename}` : '',

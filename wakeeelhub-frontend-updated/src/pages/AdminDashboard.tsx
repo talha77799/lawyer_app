@@ -617,12 +617,12 @@ export default function AdminDashboard() {
                             <Mail size={13} color="var(--text-muted)" /> {record.email || 'No email'}
                           </div>
                           {record.phone && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: 3 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: 8 }}>
                               <Phone size={12} /> {record.phone}
                             </div>
                           )}
                           {record.city && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: 3 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: 8 }}>
                               <MapPin size={12} /> {record.city}
                             </div>
                           )}
@@ -1016,7 +1016,7 @@ export default function AdminDashboard() {
                 <h3 style={{ fontSize: '0.95rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
                   Contact & Location
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem', background: '#f8fafc', padding: '1rem', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: 10, border: '1px solid #e2e8f0' }}>
                   <div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Email Address</div>
                     <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)' }}>{selectedUserModal.email || 'None'}</div>

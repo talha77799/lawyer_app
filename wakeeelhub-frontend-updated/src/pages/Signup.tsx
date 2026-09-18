@@ -23,6 +23,7 @@ type SignupForm = {
   casesCleared: string
   bankAccountNumber: string
   bankProvider: string
+  experienceYears: string
 }
 
 export default function Signup() {
@@ -42,6 +43,7 @@ export default function Signup() {
     casesCleared: '',
     bankAccountNumber: '',
     bankProvider: '',
+    experienceYears: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -100,6 +102,7 @@ export default function Signup() {
         requestBody.append('lawInstitution', form.lawInstitution.trim())
         requestBody.append('casesHandled', form.casesHandled)
         requestBody.append('casesCleared', form.casesCleared)
+        requestBody.append('experienceYears', form.experienceYears)
         requestBody.append('bankAccountNumber', form.bankAccountNumber.trim())
         requestBody.append('bankProvider', form.bankProvider)
       }
@@ -229,6 +232,10 @@ export default function Signup() {
                   <label htmlFor="signup-cases-cleared">Cases successfully cleared</label>
                   <input id="signup-cases-cleared" type="number" min="0" required value={form.casesCleared} onChange={(e) => updateField('casesCleared', e.target.value)} />
                 </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="signup-experience">Years of Experience</label>
+                <input id="signup-experience" type="number" min="0" required value={form.experienceYears} onChange={(e) => updateField('experienceYears', e.target.value)} placeholder="e.g. 5" />
               </div>
               <div className="form-group">
                 <label htmlFor="signup-qualification">Law certificate / degree</label>

@@ -42,10 +42,19 @@ export default function LawyerDashboard() {
   const lawyerName = signedInUser?.name || signedInUser?.username || lawyer.name
   const lawyerAvatar = getAssetUrl(signedInUser?.avatar)
   const lawyerInitials = lawyerName.split(' ').map((part: string) => part[0]).slice(0, 2).join('').toUpperCase() || 'L'
-  const myAppts = appointments.filter(a => a.lawyerId === lawyer.id)
-  const myCases = cases.filter(c => c.lawyerId === lawyer.id)
+  
+  // If a real user is signed in, filter by their ID (which will yield empty arrays for new users against mock data)
+  const currentLawyerId = signedInUser?._id || lawyer.id
+  const myAppts = appointments.filter(a => a.lawyerId === currentLawyerId)
+  const myCases = cases.filter(c => c.lawyerId === currentLawyerId)
   const upcoming = myAppts.filter(a => a.status === 'upcoming')
   const earnings = myAppts.reduce((s, a) => s + a.fee, 0)
+  
+  const rating = signedInUser?.rating || 0
+  const reviewsCount = signedInUser?.reviews || 0
+
+  const displayValue = (val: number) => val === 0 ? '------' : val;
+  const displayEarnings = (val: number) => val === 0 ? '------' : `Rs. ${val.toLocaleString()}`;
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -253,20 +262,20 @@ export default function LawyerDashboard() {
         <div className="stats-grid">
           <div className="stat-card">
             <div className="label">Today's Appointments</div>
-            <div className="value">{upcoming.length}</div>
+            <div className="value">{displayValue(upcoming.length)}</div>
           </div>
           <div className="stat-card">
             <div className="label">Active Cases</div>
-            <div className="value">{myCases.length}</div>
+            <div className="value">{displayValue(myCases.length)}</div>
           </div>
           <div className="stat-card">
             <div className="label">Total Earnings</div>
-            <div className="value" style={{ fontSize: '1.35rem' }}>Rs. {earnings.toLocaleString()}</div>
+            <div className="value" style={{ fontSize: '1.35rem' }}>{displayEarnings(earnings)}</div>
           </div>
           <div className="stat-card">
             <div className="label">Rating</div>
-            <div className="value">{lawyer.rating} ★</div>
-            <div className="change">{lawyer.reviews} reviews</div>
+            <div className="value">{rating === 0 ? '------' : `${rating} ★`}</div>
+            <div className="change">{reviewsCount === 0 ? '------' : `${reviewsCount} reviews`}</div>
           </div>
         </div>
 
